@@ -33,33 +33,36 @@ void Chat(int childfd)
 		}
 		buf[received] = '\0';
 		printf("%s\n", buf);
-
-		ssize_t sent = send(childfd, buf, strlen(buf), 0);
-		if (sent == 0) {
-			perror("send failed");
+		
+		if(bflag)
+		{
 			m.lock();
-			Clients.erase(childfd);
+			for(auto i = Clients.begin(); i != Clients.end(); i++)
+			{
+				ssize_t sent = send(*i, buf, strlen(buf), 0);
+				if (sent == 0) {
+					perror("send failed");
+					Clients.erase(*i);
+					break;
+				}
+			}
 			m.unlock();
-			break;
+		}
+		else
+		{
+			ssize_t sent = send(childfd, buf, strlen(buf), 0);
+			if (sent == 0) {
+				perror("send failed");
+				m.lock();
+				Clients.erase(childfd);
+				m.unlock();
+				break;
+			}
 		}
 	}
 }
 
 int main(int argc, char *argv[]) {
-	int option;
-	while((option = getopt(argc, argv, "b"))!=EOF)
-	{
-	        switch(option)
-	        {
-	        	case 'b':
-				bflag = 1;
-				break;
-			case '?':
-				printf("Unknown option\n");
-				break;
-	        }
-	}
-	
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1) {
 		perror("socket failed");
@@ -74,6 +77,18 @@ int main(int argc, char *argv[]) {
 	addr.sin_port = htons(atoi(argv[1]));
 	addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	memset(addr.sin_zero, 0, sizeof(addr.sin_zero));
+
+	int option;
+	while((option = getopt(argc, argv, "b"))!=EOF) {
+	        switch(option) {
+	        	case 'b':
+				bflag = 1;
+				break;
+			case '?':
+				printf("Unknown option\n");
+				break;
+	        }
+	}
 
 	int res = bind(sockfd, reinterpret_cast<struct sockaddr*>(&addr), sizeof(struct sockaddr));
 	if (res == -1) {

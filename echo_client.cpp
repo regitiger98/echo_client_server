@@ -6,6 +6,25 @@
 #include <netinet/in.h> // for sockaddr_in
 #include <sys/socket.h> // for socket
 
+#include <thread>
+using namespace std;
+
+void Recv(int sockfd)
+{
+	const static int BUFSIZE = 1024;
+	char buf[BUFSIZE];
+
+	while (true) {
+		ssize_t received = recv(sockfd, buf, BUFSIZE - 1, 0);
+		if (received == 0 || received == -1) {
+			perror("recv failed");
+			break;
+		}
+		buf[received] = '\0';
+		printf("%s\n", buf);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1) {
@@ -25,7 +44,8 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	printf("connected\n");
-
+	
+	thread Thread = thread(Recv, sockfd);
 	while (true) {
 		const static int BUFSIZE = 1024;
 		char buf[BUFSIZE];
@@ -38,15 +58,8 @@ int main(int argc, char *argv[]) {
 			perror("send failed");
 			break;
 		}
-
-		ssize_t received = recv(sockfd, buf, BUFSIZE - 1, 0);
-		if (received == 0 || received == -1) {
-			perror("recv failed");
-			break;
-		}
-		buf[received] = '\0';
-		printf("%s\n", buf);
 	}
+	Thread.join();
 
 	close(sockfd);
 }
