@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-	vector<thread*> T;
+	vector<thread> T;
 	for(int i = 0;; i++) {
 		struct sockaddr_in addr;
 		socklen_t clientlen = sizeof(sockaddr);
@@ -93,9 +93,7 @@ int main(int argc, char *argv[]) {
 		printf("connected %d\n", childfd);
 		Clients.insert(childfd);
 
-		thread *Thread = new thread;
-		*Thread = thread(Chat, childfd);
-		T.push_back(Thread);
+		T.push_back(thread(Chat, childfd));
 	}
 	
 	close(sockfd);
