@@ -45,13 +45,16 @@ int main(int argc, char *argv[]) {
 	}
 	printf("connected\n");
 	
-	thread Thread = thread(Recv, sockfd);
+	thread Thread(Recv, sockfd);
 	while (true) {
 		const static int BUFSIZE = 1024;
 		char buf[BUFSIZE];
 
 		scanf("%s", buf);
-		if (strcmp(buf, "quit") == 0) break;
+		if (strcmp(buf, "quit") == 0) {
+			close(sockfd);
+			return 0;
+		}
 
 		ssize_t sent = send(sockfd, buf, strlen(buf), 0);
 		if (sent == 0) {
