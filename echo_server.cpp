@@ -9,10 +9,12 @@
 #include <set> // for set
 #include <vector> // for vector
 #include <thread> // for thread
+#include <mutex> // for mutex
 using namespace std;
 
 set<int> Clients;
 int bflag = 0;
+mutex m;
 
 void Chat(int childfd)
 {
@@ -23,7 +25,9 @@ void Chat(int childfd)
 		ssize_t received = recv(childfd, buf, BUFSIZE - 1, 0);
 		if (received == 0 || received == -1) {
 			perror("recv failed");
+			m.lock();
 			Clients.erase(childfd);
+			m.unlock();
 			break;
 
 		}
@@ -33,7 +37,9 @@ void Chat(int childfd)
 		ssize_t sent = send(childfd, buf, strlen(buf), 0);
 		if (sent == 0) {
 			perror("send failed");
+			m.lock();
 			Clients.erase(childfd);
+			m.unlock();
 			break;
 		}
 	}
@@ -91,7 +97,10 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 		printf("connected %d\n", childfd);
+
+		m.lock();
 		Clients.insert(childfd);
+		m.unlock();
 
 		T.push_back(thread(Chat, childfd));
 	}
