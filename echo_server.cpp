@@ -21,8 +21,8 @@ void Chat(int childfd)
 	while (true) {
 		const static int BUFSIZE = 1024;
 		char buf[BUFSIZE];
-		char head[20] = "Msg from 0 : ";
-		head[9] = childfd + 48;
+		char head[20];
+		snprintf(head, 20, "Msg from %d : ", childfd);
 
 		ssize_t received = recv(childfd, buf, BUFSIZE - 1, 0);
 		if (received == 0 || received == -1) {
@@ -47,7 +47,6 @@ void Chat(int childfd)
 				if (sent == 0) {
 					perror("send failed");
 					Clients.erase(*i);
-					break;
 				}
 			}
 			m.unlock();
@@ -91,7 +90,7 @@ int main(int argc, char *argv[]) {
 				break;
 			case '?':
 				printf("Unknown option\n");
-				break;
+				exit(1);
 	        }
 	}
 

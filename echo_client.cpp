@@ -18,7 +18,7 @@ void Recv(int sockfd)
 		ssize_t received = recv(sockfd, buf, BUFSIZE - 1, 0);
 		if (received == 0 || received == -1) {
 			perror("recv failed");
-			break;
+			exit(1);
 		}
 		buf[received] = '\0';
 		printf("%s\n", buf);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 		scanf("%s", buf);
 		if (strcmp(buf, "quit") == 0) {
 			close(sockfd);
-			return 0;
+			exit(1);
 		}
 
 		ssize_t sent = send(sockfd, buf, strlen(buf), 0);
